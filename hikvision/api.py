@@ -549,14 +549,38 @@ class CreateDevice(object):
         #PUT to /PTZCtrl/channels/ <ChannelID> /homeposition/goto, no data
         return self.set("/PTZCtrl/channels/" + str(channelid) + "/homeposition/goto")
 
-    def ptzRelative(self,posX,posY,relZ, channel=1):
+    def ptzMomentary(self, pan, tilt, zoom, duration = 1000, channel=1):
+        """It is used to control PTZ move around and zoom in a
+        period of time for the device."""
+        xmlstr = '<PTZData>' +\
+                "<pan>" + str(pan) + "</pan>"+\
+                "<tilt>"  + str(tilt) + "</tilt>"+\
+                "<zoom>" + str(zoom) + "</zoom>"+\
+                "<Momentary>"+ \
+                    "<duration>" + str(duration) + "</duration>" + \
+                "</Momentary>" +\
+                "</PTZData>"
+        c = self.set("PTZCtrl/channels/" + str(channel) + "/momentary", xmlstr,flags="sendexact")
+        return c
+
+    def ptzRelative(self, posX, posY, relZ, channel=1):
         """Move the position (expressed in pixels, posX and posY) to the center of the image by pan and tilt, and set the relative zoom (-100:100)"""
         """untested"""
-        xmlstr = "<PTZData><Relative>" +\
+        xmlstr = '<PTZData>'+\
+                 "<Relative>" +\
                 "<positionX>" + str(posX) + "</positionX>"+\
                 "<positionY>"  + str(posY) + "</positionY>"+\
                 "<relativeZoom>" + str(relZ) + "</relativeZoom>"+\
-                "</Relative></PTZData>"
-        c = self.set("ptzctrl/channels/" + str(channel) + "/relative", xmlstr,flags="sendexact")
+                "</Relative>"+\
+                "</PTZData>"
+        print(xmlstr)
+        c = self.set("PTZCtrl/channels/" + str(channel) + "/relative", xmlstr,flags="sendexact")
+        return c
+
+    def LensInitialization(self, enabled, channel=1):
+        """ It is used to update focus parameters of a specified image channel."""
+        enablestring = "true" if enabled else "false"
+        xmlstr = '<LensInitialization><enabled>' + enablestring + "</enabled></LensInitialization>"
+        c = self.set("Image/channels/" + str(channel) + "/LensInitialization", xmlstr,flags="sendexact")
         return c
 
