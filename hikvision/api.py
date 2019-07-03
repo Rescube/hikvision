@@ -571,7 +571,7 @@ class CreateDevice(object):
                 "<positionX>" + str(posX) + "</positionX>"+\
                 "<positionY>"  + str(posY) + "</positionY>"+\
                 "<relativeZoom>" + str(relZ) + "</relativeZoom>"+\
-                "</Relative>"+\
+                "</R1elative>"+\
                 "</PTZData>"
         print(xmlstr)
         c = self.set("PTZCtrl/channels/" + str(channel) + "/relative", xmlstr,flags="sendexact")
@@ -580,7 +580,55 @@ class CreateDevice(object):
     def LensInitialization(self, enabled, channel=1):
         """ It is used to update focus parameters of a specified image channel."""
         enablestring = "true" if enabled else "false"
-        xmlstr = '<LensInitialization><enabled>' + enablestring + "</enabled></LensInitialization>"
-        c = self.set("Image/channels/" + str(channel) + "/LensInitialization", xmlstr,flags="sendexact")
+        xmlstr = '<?xml version="1.0" encoding="UTF-8"?>' \
+            '<LensInitialization version="1.0" xmlns="http://www.std-cgi.com/ver10/XMLSchema"><enabled>' + enablestring + "</enabled></LensInitialization>"
+        c = self.set("PTZ/channels/1/PTZControl?command=FOCUS_FAR&speed=1&mode=start")
+        print(xmlstr)
         return c
 
+    #def setFocus(self, focus_mode, value=0, limit = 'INFINITE'):
+    
+    def setOSDEnabled(self, enabled, channel = 1):
+        enablestring = "true" if enabled else "false"
+        xmlstr = '<?xml version="1.0" encoding="UTF-8"?>' \
+        '<OsdDatetime version="1.0" xmlns="http://www.std-cgi.com/ver10/XMLSchema">' \
+            '<enabled>'+enablestring+'</enabled>' \
+             '<posX>0</posX>' \
+             '<posY>0</posY>' \
+             '<type>1</type>' \
+             '<displayWeek>true</displayWeek>' \
+             '<attribute>4</attribute>' \
+             '<timeFormat>24hours</timeFormat>' \
+        '</OsdDatetime>'
+        print(xmlstr)
+        c = self.set("Video/inputs/channels/" + str(channel) + "/osdDatetime", xmlstr, flags="sendexact")
+        return c
+
+    def setAutoFocus(self, limit, channel = 1) :
+        print(self.get("Image/channels/1/Focus"))
+        xmlstr = '<?xml version="1.0" encoding="UTF-8"?> \
+                    <Focus version="1.0" xmlns="http://www.hikvision.com/ver10/XMLSchema"> \
+                    <FocusStyle>SEMIAUTOMATIC</FocusStyle> \
+                    < FocusLimited >1.5m< / FocusLimited > \
+                    </Focus>'
+        print(xmlstr)
+        c = self.set("Video/inputs/channels/" + str(channel) + "/Focus", xmlstr, flags="sendexact")
+        return c
+
+    def setManualFocus(self, limit, value, channel = 1) :
+        print(self.get("Image/channels/1/Focus"))
+        xmlstr = '<?xml version="1.0" encoding="UTF-8"?>' +\
+                    '<Focus>' +\
+                    '<FocusStyle>MANUAL</FocusStyle>' +\
+                    '<FocusLimited>'+limit+'</FocusLimited>' +\
+                    '<FocusValue>' + value + '</FocusValue> +\
+                    </Focus>'
+        print(xmlstr)
+        c = self.set("Video/inputs/channels/" + str(channel) + "/Focus", xmlstr, flags="sendexact")
+        return c
+
+    def focusFar(self):
+        c = self.set("PTZ/channels/1/PTZControl?command=FOCUS_FAR&speed=1&mode=start")
+
+    def focusNear(self):
+        c = self.set("PTZ/channels/1/PTZControl?command=FOCUS_NEAR&speed=1&mode=start")
